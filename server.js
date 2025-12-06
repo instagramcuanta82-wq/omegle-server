@@ -10,7 +10,7 @@ wss.on("connection", ws => {
 
     if (waiting === null) {
         waiting = ws;
-        ws.send(JSON.stringify({ type: "status", msg: "Esperando otro usuario..." }));
+        ws.send(JSON.stringify({ type: "waiting" }));
     } else {
         const partner = waiting;
         waiting = null;
@@ -18,8 +18,8 @@ wss.on("connection", ws => {
         ws.partner = partner;
         partner.partner = ws;
 
-        ws.send(JSON.stringify({ type: "status", msg: "Pareja encontrada" }));
-        partner.send(JSON.stringify({ type: "status", msg: "Pareja encontrada" }));
+        ws.send(JSON.stringify({ type: "matched" }));
+        partner.send(JSON.stringify({ type: "matched" }));
     }
 
     ws.on("message", msg => {
@@ -30,11 +30,10 @@ wss.on("connection", ws => {
 
     ws.on("close", () => {
         if (ws.partner && ws.partner.readyState === WebSocket.OPEN) {
-            ws.partner.send(JSON.stringify({ type: "status", msg: "El otro se desconectó" }));
+            ws.partner.send(JSON.stringify({ type: "disconnect" }));
             ws.partner.partner = null;
         }
+
         if (waiting === ws) waiting = null;
     });
 });
-
-console.log("Servidor WebSocket running");
